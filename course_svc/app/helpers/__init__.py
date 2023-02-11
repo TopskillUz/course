@@ -1,1 +1,1 @@
-from .course_topic_helper import *
+from .profession_helper import ProfessionHelper

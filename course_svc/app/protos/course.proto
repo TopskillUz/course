@@ -1,0 +1,20 @@
+syntax = "proto3";
+import "course_types.proto";
+import "tag_types.proto";
+import "google/protobuf/empty.proto";
+
+service CourseService {
+  // Profession
+  rpc ListProfessions (course_types.ListProfessionsRequest) returns (course_types.ListProfessionsResponse);
+  rpc GetProfession (course_types.GetProfessionRequest) returns (course_types.ProfessionMessage);
+  rpc CreateProfession (course_types.CreateUpdateProfessionRequest) returns (course_types.ProfessionMessage);
+  rpc UpdateProfession (course_types.UpdateProfessionRequest) returns (course_types.ProfessionMessage);
+  rpc DeleteProfession (course_types.DeleteProfessionRequest) returns (google.protobuf.Empty);
+
+  // Tag
+  rpc ListTags (tag_types.ListTagsRequest) returns (tag_types.ListTagsResponse);
+  rpc GetTag (tag_types.GetTagRequest) returns (tag_types.TagMessage);
+  rpc CreateTag (tag_types.CreateUpdateTagRequest) returns (tag_types.TagMessage);
+  rpc UpdateTag (tag_types.UpdateTagRequest) returns (tag_types.TagMessage);
+  rpc DeleteTag (tag_types.DeleteTagRequest) returns (google.protobuf.Empty);
+}

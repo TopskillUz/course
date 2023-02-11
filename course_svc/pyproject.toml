@@ -21,6 +21,7 @@ mock = "^5.0.1"
 alembic = "^1.9.2"
 sqlalchemy-utils = "^0.39.0"
 uvicorn = "^0.20.0"
+babel = "^2.11.0"
 
 
 [build-system]

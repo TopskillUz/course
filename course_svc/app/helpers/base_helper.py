@@ -20,6 +20,3 @@ class BaseHelper:
             return None
         return Timestamp(seconds=int(getattr(obj, attr).timestamp()))
 
-
-
-

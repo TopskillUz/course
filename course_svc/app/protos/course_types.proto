@@ -1,0 +1,60 @@
+syntax = "proto3";
+package course_types;
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/field_mask.proto";
+
+message ProfessionMessage {
+  int32 id = 1;
+  string title = 2;
+  string desc = 3;
+  bool is_active = 4;
+  int32 sort = 5;
+  string slug = 6;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+  google.protobuf.Timestamp deleted_at = 10;
+}
+
+
+message ProfessionShortMessage {
+  int32 id = 1;
+  string name = 2;
+}
+
+
+message GetProfessionRequest {
+  int32 obj_id = 1;
+}
+
+message CreateUpdateProfessionRequest {
+  string title = 1;
+  string desc = 2;
+  bool is_active = 3;
+  int32 sort = 4;
+  string slug = 5;
+}
+
+message ListProfessionsRequest {
+  int32 page_number = 1;
+  int32 page_size = 2;
+  string order_by = 3;
+  bool desc = 4;
+}
+
+message UpdateProfessionRequest {
+  int64 obj_id = 1;
+  CreateUpdateProfessionRequest profession = 2;
+  google.protobuf.FieldMask mask = 3;
+}
+
+message ListProfessionsResponse {
+  int32 page_number = 1;
+  int32 page_size = 2;
+  int32 num_pages = 3;
+  int32 total_results = 4;
+  repeated ProfessionMessage results = 5;
+}
+
+message DeleteProfessionRequest {
+  int32 obj_id = 1;
+}

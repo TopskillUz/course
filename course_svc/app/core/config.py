@@ -6,6 +6,7 @@ from pydantic import BaseSettings, PostgresDsn, validator
 
 class Settings(BaseSettings):
     SVC_PORT: Union[str, int]
+    ALLOWED_LANGUAGES: tuple = ('uz', 'ru', 'en')
     # Database
     DATABASE_USER: str
     DATABASE_PASSWORD: str

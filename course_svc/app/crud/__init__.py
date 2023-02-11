@@ -1,0 +1,1 @@
+from .profession_crud import ProfessionCRUD

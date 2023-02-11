@@ -1,62 +1,122 @@
-from sqlalchemy.orm import relationship
+import enum
 
-from .media_model import ImageMedia, FileMedia
-from .base_model import Base
 import sqlalchemy as db
+from sqlalchemy import Enum, event
+from sqlalchemy.dialects import postgresql
+
+from .base_model import Base, TranslationField
 
 
 class BaseCourseModel(Base):
     __abstract__ = True
 
-    name = db.Column(db.String, nullable=False)
-    description = db.Column(db.String, nullable=True)
+    title = TranslationField()
+    desc = TranslationField()
     is_active = db.Column(db.Boolean, default=True)
     sort = db.Column(db.Integer, default=1)
+    slug = db.Column(db.String, nullable=False, unique=True)
 
 
-class CourseTopics(BaseCourseModel):
-    parent_id = db.Column(db.Integer, db.ForeignKey("course_topics.id"))
-    # parent = relationship('CourseTopics', remote_side=[id])
-
-    locale_id = db.Column(db.Integer, db.ForeignKey("locales.id"))
-    # locale = relationship('Locales', foreign_keys='course_topics.locale_id')
+@event.listens_for(BaseCourseModel, 'before_insert')
+def base_course_model_before_insert(mapper, connect, target):
+    print(mapper, connect, target)
 
 
-class CourseCategories(BaseCourseModel):
-    main_course_topic_id = db.Column(db.Integer, db.ForeignKey("course_topics.id"))
-    icon_id = db.Column(db.Integer, db.ForeignKey(ImageMedia.id))
-
-    parent_id = db.Column(db.Integer, db.ForeignKey("course_categories.id"))
-    # parent = relationship('CourseCategories', remote_side=[id])
-
-    locale_id = db.Column(db.Integer, db.ForeignKey("locales.id"))
-    # locale = relationship('Locales', foreign_keys='course_categories.locale_id')
+class Profession(BaseCourseModel):
+    """ Kasblar:
+            1. Dasturlash
+            2. Dizayn
+            3. Marketing
+            4. Analitika
+    """
 
 
-class Courses(BaseCourseModel):
-    parent_id = db.Column(db.Integer, db.ForeignKey("courses.id"))
-    locale_id = db.Column(db.Integer, db.ForeignKey("locales.id"))
-    photo_id = db.Column(db.Integer, db.ForeignKey(ImageMedia.id))
-    trailer_id = db.Column(db.Integer, db.ForeignKey(FileMedia.id))
-    author_id = db.Column(db.Integer)
-    mentor_id = db.Column(db.Integer)
+class Topic(BaseCourseModel):
+    profession_id = db.Column(db.Integer, db.ForeignKey("profession.id"))
 
 
-class CategoriesCourses(Base):
-    category_id = db.Column(db.Integer, db.ForeignKey("course_categories.id"))
-    course_id = db.Column(db.Integer, db.ForeignKey("courses.id"))
+class Category(BaseCourseModel):
+    topic_id = db.Column(db.Integer, db.ForeignKey("topic.id"))
+    logo_id = db.Column(db.Integer)  # fk(image_media)
 
 
-class CoursePrices(Base):
-    course_id = db.Column(db.Integer, db.ForeignKey("courses.id"))
-    price = db.Column(db.Float, nullable=True)
-    percent = db.Column(db.Float, nullable=True)
-    percent_price = db.Column(db.Float, nullable=True)
-    author_id = db.Column(db.Integer)
+class CourseStatusEnum(int, enum.Enum):
+    public = 0
+    private = 1
+    premiere = 2
 
 
-class UserCoursePurchases(Base):
-    user_id = db.Column(db.Integer)
-    course_id = db.Column(db.Integer, db.ForeignKey("courses.id"))
-    course_price_id = db.Column(db.Integer, db.ForeignKey("course_prices.id"))
-    paid_percent = db.Column(db.Float, nullable=True)
+class DifficultyLevelEnum(int, enum.Enum):
+    beginner = 0
+    intermediate = 1
+    expert = 2
+
+
+class LanguageEnum(int, enum.Enum):
+    uz = 0
+    ru = 1
+    en = 2
+
+
+class Course(BaseCourseModel):
+    sub_title = TranslationField()
+    created_by = db.Column(db.Integer, nullable=False)  # fk(user)
+    price = db.Column(db.Float, default=0)
+    is_free = db.Column(db.Boolean, default=False)
+    banner_image = db.Column(db.Integer, nullable=True)  # fk(image_media)
+    trailer = db.Column(db.Integer, nullable=True)  # fk(file_media)
+    organization_id = db.Column(db.Integer, nullable=True)  # fk(organization)
+    status = db.Column(Enum(CourseStatusEnum), default=CourseStatusEnum.public)
+    is_verified = db.Column(db.Boolean, default=False)
+    is_for_child = db.Column(db.Boolean, default=False)
+    level = db.Column(Enum(DifficultyLevelEnum), default=DifficultyLevelEnum.beginner)
+    language = db.Column(Enum(LanguageEnum), default=LanguageEnum.uz)
+    installment_payment_id = db.Column(db.Integer, nullable=True)  # fk(installment_payment)
+    discount_id = db.Column(db.Integer, nullable=True)  # fk(discount)
+
+
+class LinkCategoryCourse(Base):
+    category_id = db.Column(db.Integer, db.ForeignKey("category.id"), nullable=False)
+    course_id = db.Column(db.Integer, db.ForeignKey("course.id"), nullable=False)
+
+
+class CourseModule(BaseCourseModel):
+    course_id = db.Column(db.Integer, db.ForeignKey("course.id"))
+    content = TranslationField()
+    is_free = db.Column(db.Boolean, default=False)
+    price = db.Column(db.Float, default=0)
+    level = db.Column(postgresql.ENUM(DifficultyLevelEnum, create_type=False, checkfirst=True,
+                                      inherit_schema=True), default=DifficultyLevelEnum.beginner)
+    discount_id = db.Column(db.Integer, nullable=True)  # fk(discount)
+
+
+class CourseLesson(BaseCourseModel):
+    course_module_id = db.Column(db.Integer, db.ForeignKey('course_module.id'))
+    content = TranslationField()
+    is_free = db.Column(db.Boolean, default=False)
+    price = db.Column(db.Float, default=0)
+    video_id = db.Column(db.Integer, nullable=True)  # fk(file_media)
+    is_learned = db.Column(db.Boolean, default=False)
+    discount_id = db.Column(db.Integer, nullable=True)  # fk(discount)
+
+
+class CourseComment(Base):
+    created_by = db.Column(db.Integer, nullable=False)  # fk(user)
+    course_id = db.Column(db.Integer, db.ForeignKey("course.id"), nullable=False)
+    text = db.Column(db.Text, nullable=False)
+    replied_by = db.Column(db.Integer, db.ForeignKey('course_comment.id'))
+
+
+class LinkUserAllowedCourse(Base):
+    user_id = db.Column(db.Integer, nullable=False)  # fk(user)
+    course_id = db.Column(db.Integer, db.ForeignKey("course.id"), nullable=False)
+
+
+class LinkUserAllowedCourseModule(Base):
+    user_id = db.Column(db.Integer, nullable=False)  # fk(user)
+    course_module_id = db.Column(db.Integer, db.ForeignKey("course_module.id"), nullable=False)
+
+
+class LinkUserAllowedCourseLesson(Base):
+    user_id = db.Column(db.Integer, nullable=False)  # fk(user)
+    course_lesson_id = db.Column(db.Integer, db.ForeignKey("course_lesson.id"), nullable=False)

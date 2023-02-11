@@ -1,0 +1,50 @@
+syntax = "proto3";
+package tag_types;
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/field_mask.proto";
+
+message TagMessage {
+  int32 id = 1;
+  string title = 2;
+  bool is_active = 3;
+  string slug = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+  google.protobuf.Timestamp deleted_at = 7;
+}
+
+
+message GetTagRequest {
+  int32 obj_id = 1;
+}
+
+message CreateUpdateTagRequest {
+  string title = 1;
+  bool is_active = 2;
+  string slug = 3;
+}
+
+message ListTagsRequest {
+  int32 page_number = 1;
+  int32 page_size = 2;
+  string order_by = 3;
+  bool desc = 4;
+}
+
+message UpdateTagRequest {
+  int64 obj_id = 1;
+  CreateUpdateTagRequest tag = 2;
+  google.protobuf.FieldMask mask = 3;
+}
+
+message ListTagsResponse {
+  int32 page_number = 1;
+  int32 page_size = 2;
+  int32 num_pages = 3;
+  int32 total_results = 4;
+  repeated TagMessage results = 5;
+}
+
+message DeleteTagRequest {
+  int32 obj_id = 1;
+}
